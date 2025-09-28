@@ -22,7 +22,7 @@
     const INTENT_COOLDOWN_MS = 8000;
     const MODAL_ID = "checkout-guard-overlay";
     const TOAST_ID = "checkout-guard-toast";
-    const DEBUG = false;
+    const DEBUG = true;
 
     const CART_ITEM_SELECTORS = [
         ".cart-item",
@@ -69,6 +69,27 @@
         ".total-price",
         "[class*='total' i]",
         "[id*='total' i]",
+        // eBay-specific selectors
+        "[data-test-id='CART_SUMMARY_SUBTOTAL']",
+        "[data-test-id*='subtotal' i]",
+        ".cart-summary-subtotal",
+        ".cart-subtotal",
+        ".subtotal-amount",
+        // Shopify selectors
+        ".cart__subtotal",
+        ".order-summary__section--subtotal",
+        ".payment-due-label",
+        ".skeleton-while-loading--tabular-nums",
+        // WooCommerce selectors
+        ".cart-subtotal .amount",
+        ".order-total .amount",
+        ".woocommerce-Price-amount",
+        // Generic e-commerce selectors
+        "[data-price-target='subtotal']",
+        "[data-automation-id*='subtotal']",
+        ".checkout-subtotal",
+        ".cart-total-price",
+        ".order-summary-total",
     ];
 
     const QUANTITY_SELECTORS = [
@@ -166,9 +187,11 @@
         focusRestore: null,
     };
 
+    console.log('[CheckoutGuard] Extension loading on:', window.location.href);
     init();
 
     async function init() {
+        console.log('[CheckoutGuard] Initializing extension...');
         await hydrateBalance();
         setupBalanceChangeListener();
         setupShadowModal();
@@ -176,6 +199,7 @@
         setupCartChangeListeners();
         setupEscAndClickAway();
         startMutationObserver();
+        console.log('[CheckoutGuard] About to analyze context...');
         analyzeContext();
     }
 
@@ -536,7 +560,9 @@
             forceUpdate ||
             totalChanged ||
             (!state.cartDismissed && !state.modalVisible);
-        if (shouldShow) {
+
+        // Don't show modal if cart total is $0
+        if (shouldShow && cartTotal > 0) {
             showModal();
         }
         // Get current total for popup summary too
@@ -556,6 +582,7 @@
     }
 
     function detectCheckoutContext() {
+        console.log('[CheckoutGuard] Detecting checkout context for:', window.location.href);
         let score = 0;
         let containerChanged = false;
         let container = state.cartContainer;
@@ -564,8 +591,14 @@
         try {
             const url = new URL(window.location.href);
             const path = url.pathname.toLowerCase();
-            if (CHECKOUT_KEYWORDS.some((keyword) => path.includes(keyword)))
+            const hostname = url.hostname.toLowerCase();
+            console.log('[CheckoutGuard] Checking URL path:', path, 'hostname:', hostname);
+
+            // Check both path and hostname for checkout keywords
+            if (CHECKOUT_KEYWORDS.some((keyword) => path.includes(keyword) || hostname.includes(keyword))) {
                 score += 2;
+                console.log('[CheckoutGuard] URL path or hostname matches checkout keywords, score +2');
+            }
         } catch (error) {
             logDebug("URL parse failed", error);
         }
@@ -599,6 +632,14 @@
 
             const host = window.location.hostname;
             if (/amazon\./i.test(host)) score += 2;
+            if (/ebay\./i.test(host)) {
+                score += 2;
+                console.log('[CheckoutGuard] eBay domain detected, score +2');
+            }
+            if (/walmart\./i.test(host)) {
+                score += 2;
+                console.log('[CheckoutGuard] Walmart domain detected, score +2');
+            }
             if (/shopify/i.test(document.documentElement.outerHTML)) score += 1;
             if (/woocommerce/i.test(document.documentElement.outerHTML))
                 score += 1;
@@ -607,7 +648,17 @@
         paymentSection = findPaymentSection(document.body);
         if (paymentSection) score += 1;
 
-        const isCheckout = score >= 4;
+        // Site-specific checkout thresholds
+        const host = window.location.hostname;
+        let threshold = 4;
+        if (/walmart\./i.test(host)) {
+            threshold = 3;
+            console.log('[CheckoutGuard] Using Walmart-specific threshold: 3');
+        }
+
+        const isCheckout = score >= threshold;
+        console.log('[CheckoutGuard] Final checkout detection - Score:', score, 'IsCheckout:', isCheckout);
+
         if (container && container !== state.cartContainer) {
             containerChanged = true;
         }
@@ -729,6 +780,14 @@
     }
 
     function findExplicitTotal(scope) {
+        // For all e-commerce sites, first try to find subtotal by scanning for "Subtotal" text
+        const subtotalResult = findSubtotalByText(scope);
+        if (subtotalResult) {
+            state.totalNode = subtotalResult.element;
+            state.totalNodeText = state.totalNode?.textContent || "";
+            return subtotalResult.price;
+        }
+
         const totals = findTotalNodes(scope).map((el) => ({
             element: el,
             price: parsePrice(el.textContent),
@@ -756,6 +815,108 @@
         state.totalNode = valid[0].element;
         state.totalNodeText = state.totalNode?.textContent || "";
         return valid[0].price;
+    }
+
+    function findSubtotalByText(scope) {
+        logDebug('Starting findSubtotalByText search...');
+        logDebug('Current hostname:', window.location.hostname);
+
+        // Keywords to look for across all e-commerce sites
+        const subtotalKeywords = [
+            'subtotal',
+            'sub total',
+            'sub-total',
+            'cart total',
+            'order total',
+            'total',
+            'amount due',
+            'you pay'
+        ];
+
+        logDebug('Searching for keywords:', subtotalKeywords);
+
+        // Scan entire document for elements containing subtotal keywords
+        const allElements = Array.from(document.querySelectorAll('*'));
+        logDebug(`Scanning ${allElements.length} elements...`);
+
+        for (const keyword of subtotalKeywords) {
+            for (const element of allElements) {
+                const text = element.textContent || '';
+
+                // Look for elements that contain the keyword but aren't too long
+                if (new RegExp(keyword, 'i').test(text) && text.length < 150 && isVisible(element)) {
+                    logDebug(`Found element with keyword "${keyword}":`, { text: text.substring(0, 100), element });
+
+                    // Skip if element contains excluded keywords
+                    const lowerText = text.toLowerCase();
+                    if (lowerText.includes('shipping') || lowerText.includes('tax') || lowerText.includes('fee')) {
+                        logDebug(`Skipping element due to exclusion keywords: ${text.substring(0, 50)}`);
+                        continue;
+                    }
+
+                    // Check if this element itself contains a price
+                    const priceInElement = parsePrice(text);
+                    if (priceInElement && priceInElement.amount > 0) {
+                        logDebug(`Found price in element with keyword "${keyword}":`, { price: priceInElement, text });
+                        return { element, price: priceInElement };
+                    }
+
+                    // Look in parent container for price
+                    const parent = element.parentElement;
+                    if (parent) {
+                        const parentPrice = parsePrice(parent.textContent);
+                        if (parentPrice && parentPrice.amount > 0) {
+                            return { element: parent, price: parentPrice };
+                        }
+
+                        // Look for price elements within parent (generic selectors for all sites)
+                        const priceSelectors = [
+                            '.price', '.a-price', '.a-price-whole', '.a-color-price',
+                            '[class*="price"]', '[class*="amount"]', '[class*="total"]',
+                            '.cost', '.value', '.sum', '.currency',
+                            '[data-price]', '[data-amount]', '[data-total]'
+                        ];
+
+                        const priceElements = parent.querySelectorAll(priceSelectors.join(','));
+                        for (const priceEl of priceElements) {
+                            if (isVisible(priceEl)) {
+                                const price = parsePrice(priceEl.textContent);
+                                if (price && price.amount > 0) {
+                                    return { element: priceEl, price };
+                                }
+                            }
+                        }
+                    }
+
+                    // Look for adjacent elements with prices
+                    let next = element.nextElementSibling;
+                    let attempts = 0;
+                    while (next && next !== element.parentElement && attempts < 3) {
+                        const nextPrice = parsePrice(next.textContent);
+                        if (nextPrice && nextPrice.amount > 0 && isVisible(next)) {
+                            return { element: next, price: nextPrice };
+                        }
+                        next = next.nextElementSibling;
+                        attempts++;
+                    }
+
+                    // Look for previous sibling elements with prices
+                    let prev = element.previousElementSibling;
+                    attempts = 0;
+                    while (prev && prev !== element.parentElement && attempts < 3) {
+                        const prevPrice = parsePrice(prev.textContent);
+                        if (prevPrice && prevPrice.amount > 0 && isVisible(prev)) {
+                            return { element: prev, price: prevPrice };
+                        }
+                        prev = prev.previousElementSibling;
+                        attempts++;
+                    }
+                }
+            }
+        }
+
+        logDebug('No subtotal found by text search');
+        return null;
     }
 
     function findTotalNodes(scope) {
@@ -1036,6 +1197,7 @@
             remaining,
             paymentHint,
         });
+
 
         const formatter = new Intl.NumberFormat(undefined, {
             style: "currency",

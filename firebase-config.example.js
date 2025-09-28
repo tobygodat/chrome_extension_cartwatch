@@ -1,7 +1,3 @@
-import { initializeApp } from "../vendor/firebase-app.js";
-import { getAuth } from "../vendor/firebase-auth.js";
-import { getFirestore } from "../vendor/firebase-firestore.js";
-
 // Firebase configuration for CartWatch Chrome Extension
 // Copy this file to firebase-config.local.js and add your actual config values
 // firebase-config.local.js is gitignored for security
@@ -15,8 +11,4 @@ const firebaseConfig = {
     appId: "YOUR_APP_ID",
 };
 
-const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
-
-export { app, auth, db, firebaseConfig };
+export { firebaseConfig };

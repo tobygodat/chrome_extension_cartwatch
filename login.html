@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <title>CartWatch — Sign in</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <style>
+            :root {
+                --bg: #0b1220; /* deep navy backdrop */
+                --surface: #121a2b; /* card surface */
+                --navy: #14213d; /* brand navy */
+                --accent: #fca311; /* brand accent */
+                --gray: #e5e5e5;
+                --text: #e5e5e5;
+                --muted: #9aa3b2;
+                --danger: #f87171;
+                --ring: rgba(252, 163, 17, 0.35);
+                --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+            }
+            html,
+            body {
+                margin: 0;
+                padding: 0;
+                background: var(--bg);
+                color: var(--text);
+                font: 14px/1.4 ui-sans-serif, system-ui, -apple-system, Segoe UI,
+                    Roboto, Helvetica, Arial, "Apple Color Emoji",
+                    "Segoe UI Emoji";
+                width: 360px;
+                height: 520px;
+            }
+            .wrap {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                min-height: 100%;
+                padding: 24px 18px;
+                gap: 18px;
+                background: radial-gradient(
+                        600px 300px at 10% -10%,
+                        rgba(252, 163, 17, 0.08),
+                        transparent 60%
+                    ),
+                    radial-gradient(
+                        600px 300px at 110% 110%,
+                        rgba(20, 33, 61, 0.35),
+                        transparent 60%
+                    ),
+                    var(--bg);
+            }
+            .logo {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                user-select: none;
+            }
+            .logo-badge {
+                width: 40px;
+                height: 40px;
+                border-radius: 12px;
+                background: linear-gradient(135deg, var(--accent), #ffd38a);
+                box-shadow: 0 8px 18px rgba(252, 163, 17, 0.35);
+                display: grid;
+                place-items: center;
+                font-weight: 800;
+                color: #000;
+                letter-spacing: 0.5px;
+            }
+            .logo h1 {
+                margin: 0;
+                font-size: 18px;
+                letter-spacing: 0.4px;
+                font-weight: 700;
+                color: var(--gray);
+            }
+            .card {
+                width: 100%;
+                max-width: 280px;
+                background: var(--surface);
+                border-radius: 16px;
+                padding: 16px;
+                box-shadow: var(--shadow);
+                border: 1px solid rgba(255, 255, 255, 0.06);
+                backdrop-filter: blur(8px);
+                animation: pop 0.25s ease-out;
+            }
+            @keyframes pop {
+                from {
+                    transform: translateY(6px);
+                    opacity: 0;
+                }
+                to {
+                    transform: none;
+                    opacity: 1;
+                }
+            }
+            .title {
+                margin: 2px 0 14px;
+                font-size: 16px;
+                font-weight: 700;
+                color: var(--gray);
+            }
+            .field {
+                display: flex;
+                flex-direction: column;
+                gap: 6px;
+                margin: 8px 0 12px;
+            }
+            .label {
+                font-size: 12px;
+                color: var(--muted);
+            }
+            .input {
+                appearance: none;
+                border: 1px solid rgba(255, 255, 255, 0.08);
+                background: #0f1726;
+                color: var(--text);
+                border-radius: 10px;
+                padding: 10px 12px;
+                outline: none;
+                width: calc(100% - 24px);
+                transition: border 0.15s, box-shadow 0.15s, transform 0.05s;
+                font-size: 14px;
+                text-align: center;
+            }
+            .input:focus {
+                border-color: var(--accent);
+                box-shadow: 0 0 0 4px var(--ring);
+            }
+            .input.invalid {
+                border-color: var(--danger);
+                box-shadow: 0 0 0 4px rgba(248, 113, 113, 0.25);
+            }
+            .row {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                gap: 10px;
+                margin: 4px 0 10px;
+                color: var(--muted);
+            }
+            .checkbox {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                cursor: pointer;
+                user-select: none;
+            }
+            .btn {
+                width: 100%;
+                border: 0;
+                border-radius: 12px;
+                padding: 12px;
+                font-weight: 700;
+                cursor: pointer;
+                background: linear-gradient(135deg, var(--accent), #ffd38a);
+                color: #000;
+                box-shadow: 0 12px 24px rgba(252, 163, 17, 0.25);
+                transition: transform 0.05s ease, filter 0.15s ease;
+            }
+            .btn:active {
+                transform: translateY(1px);
+            }
+            .btn[disabled] {
+                opacity: 0.6;
+                cursor: not-allowed;
+                filter: grayscale(0.2);
+            }
+            .error {
+                color: var(--danger);
+                font-size: 12px;
+                min-height: 16px;
+                margin-top: 2px;
+            }
+            .footer {
+                font-size: 11px;
+                color: var(--muted);
+                text-align: center;
+                margin-top: 6px;
+            }
+            .hint {
+                font-size: 12px;
+                color: var(--muted);
+                margin-top: 6px;
+            }
+            a {
+                color: var(--accent);
+                text-decoration: none;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="wrap">
+            <div class="logo" aria-label="CartWatch">
+                <div class="logo-badge">CW</div>
+                <h1>CartWatch</h1>
+            </div>
+
+            <div class="card" role="form" aria-labelledby="form-title">
+                <div id="form-title" class="title">Sign in</div>
+
+                <div class="field">
+                    <label class="label" for="username">Email</label>
+                    <input
+                        class="input"
+                        id="username"
+                        name="email"
+                        type="email"
+                        autocomplete="email"
+                        placeholder="Enter your email"
+                        required
+                    />
+                </div>
+
+                <div class="field">
+                    <label class="label" for="password">Password</label>
+                    <input
+                        class="input"
+                        id="password"
+                        name="password"
+                        type="password"
+                        autocomplete="current-password"
+                        placeholder="••••••••"
+                        required
+                    />
+                    <div
+                        id="error"
+                        class="error"
+                        role="alert"
+                        aria-live="assertive"
+                    ></div>
+                </div>
+
+                <button id="submit" class="btn">Continue</button>
+
+                <div class="hint">
+                    This signs you into the extension. Credentials are verified
+                    by our backend (Firestore/Firebase).
+                </div>
+                <div class="footer">
+                    By continuing, you agree to the Terms & Privacy.
+                </div>
+            </div>
+        </div>
+
+        <script src="login.js" type="module"></script>
+    </body>
+</html>

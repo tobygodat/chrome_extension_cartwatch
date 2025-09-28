@@ -1,0 +1,11 @@
+# This is a placeholder for the CartWatch extension icon
+# To create the actual icon:
+# 1. Open create_icon.html in a browser
+# 2. Click "Download Icon" to get icon128.png
+# 3. Replace this file with the downloaded icon
+# 
+# The icon should be 128x128 pixels with:
+# - Gradient background (blue to purple)
+# - White "M" letter in the center
+# - Red alert dot with exclamation mark
+# - White border around the circle

@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>CartWatch – Checkout Guardian</title>
+        <style>
+            :root {
+                --bg: #0b1220; /* deep navy backdrop */
+                --surface: #121a2b; /* card surface */
+                --navy: #14213d; /* brand navy */
+                --accent: #fca311; /* brand accent */
+                --gray: #e5e5e5;
+                --text: #e5e5e5;
+                --muted: #9aa3b2;
+                --danger: #f87171;
+                --ring: rgba(252, 163, 17, 0.35);
+                --shadow: 0 18px 50px rgba(0, 0, 0, 0.35);
+            }
+            body {
+                width: 320px;
+                margin: 0;
+                padding: 20px;
+                background: radial-gradient(
+                        600px 300px at 10% -10%,
+                        rgba(252, 163, 17, 0.08),
+                        transparent 60%
+                    ),
+                    radial-gradient(
+                        600px 300px at 110% 110%,
+                        rgba(20, 33, 61, 0.35),
+                        transparent 60%
+                    ),
+                    var(--bg);
+                color: var(--text);
+                font: 14px/1.4 ui-sans-serif, system-ui, -apple-system, Segoe UI,
+                    Roboto, Helvetica, Arial, "Apple Color Emoji",
+                    "Segoe UI Emoji";
+                display: grid;
+                gap: 16px;
+                min-height: 400px;
+            }
+            .logo {
+                display: flex;
+                align-items: center;
+                gap: 10px;
+                user-select: none;
+            }
+            .logo-badge {
+                width: 32px;
+                height: 32px;
+                border-radius: 10px;
+                background: linear-gradient(135deg, var(--accent), #ffd38a);
+                box-shadow: 0 6px 14px rgba(252, 163, 17, 0.35);
+                display: grid;
+                place-items: center;
+                font-weight: 800;
+                color: #000;
+                letter-spacing: 0.5px;
+                font-size: 12px;
+            }
+            h1 {
+                margin: 0;
+                font-size: 18px;
+                line-height: 1.4;
+                font-weight: 700;
+                color: var(--gray);
+                letter-spacing: 0.4px;
+            }
+            .card {
+                background: var(--surface);
+                border-radius: 16px;
+                padding: 18px;
+                box-shadow: var(--shadow);
+                border: 1px solid rgba(255, 255, 255, 0.06);
+                backdrop-filter: blur(8px);
+                display: grid;
+                gap: 16px;
+                animation: pop 0.25s ease-out;
+            }
+            @keyframes pop {
+                from {
+                    transform: translateY(6px);
+                    opacity: 0;
+                }
+                to {
+                    transform: none;
+                    opacity: 1;
+                }
+            }
+            .status {
+                font-size: 14px;
+                color: var(--muted);
+            }
+            .balance-section {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+            .balance-label {
+                font-size: 12px;
+                color: var(--muted);
+                font-weight: 500;
+            }
+            .balance {
+                font-size: 24px;
+                font-weight: 700;
+                color: var(--accent);
+                text-shadow: 0 2px 4px rgba(252, 163, 17, 0.2);
+            }
+            .balance.loading {
+                color: var(--muted);
+                font-size: 16px;
+            }
+            .actions {
+                display: flex;
+                justify-content: flex-end;
+                align-items: center;
+                margin-top: 8px;
+            }
+            .sign-out {
+                color: var(--danger);
+                text-decoration: none;
+                font-weight: 600;
+                font-size: 12px;
+                padding: 6px 12px;
+                border-radius: 8px;
+                transition: background-color 0.15s ease;
+            }
+            .sign-out:hover {
+                background-color: rgba(248, 113, 113, 0.1);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="logo" aria-label="CartWatch">
+            <div class="logo-badge">CW</div>
+            <h1>CartWatch</h1>
+        </div>
+        
+        <p class="status">Watching for checkout pages…</p>
+        
+        <section class="card">
+            <div class="balance-section">
+                <span class="balance-label">Current balance</span>
+                <div class="balance" id="popupBalance">Loading...</div>
+            </div>
+            <div class="actions">
+                <a href="#" id="signOut" class="sign-out">Sign Out</a>
+            </div>
+        </section>
+        <script src="popup.js" type="module"></script>
+    </body>
+</html>

@@ -1,0 +1,31 @@
+{
+    "manifest_version": 3,
+    "name": "CartWatch \u2013 Checkout Guard",
+    "version": "0.2.0",
+    "description": "Real-time affordability & payment risk guardrails for shoppers",
+    "permissions": ["storage", "activeTab", "scripting"],
+    "host_permissions": ["<all_urls>"],
+    "background": {
+        "service_worker": "background.js",
+        "type": "module"
+    },
+    "content_scripts": [
+        {
+            "matches": ["http://*/*", "https://*/*"],
+            "js": ["content.js"],
+            "run_at": "document_idle"
+        }
+    ],
+    "action": {
+        "default_popup": "login.html",
+        "default_title": "CartWatch"
+    },
+    "icons": {
+        "16": "icon128.png",
+        "48": "icon128.png",
+        "128": "icon128.png"
+    },
+    "content_security_policy": {
+        "extension_pages": "script-src 'self'; object-src 'self'; connect-src 'self' https://firestore.googleapis.com https://*.googleapis.com https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firebaseinstallations.googleapis.com; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'"
+    }
+}
